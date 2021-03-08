@@ -3,4 +3,5 @@ It's heavily unoptimized and quite glitchy in complex scenarios but
 it handles simple things just fine.
 
 See LICENSE for the license (MIT)
-See api.txt for a simple explanation on how to use the api.
+
+See api.md for a simple explanation on how to use the api.
