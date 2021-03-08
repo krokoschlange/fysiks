@@ -1,0 +1,26 @@
+fysiks = {}
+
+local modpath = minetest.get_modpath("fysiks") .. "/"
+dofile(modpath .. "Vector.lua")
+dofile(modpath .. "Matrix.lua")
+dofile(modpath .. "BoundingVolume.lua")
+dofile(modpath .. "AABB.lua")
+dofile(modpath .. "Polyhedron.lua")
+dofile(modpath .. "FacedPolyhedron.lua")
+dofile(modpath .. "FullPolyhedron.lua")
+dofile(modpath .. "Cuboid.lua")
+dofile(modpath .. "Sphere.lua")
+dofile(modpath .. "Rigidbody.lua")
+dofile(modpath .. "CollisionDetection.lua")
+dofile(modpath .. "Constraint.lua")
+dofile(modpath .. "ContactConstraint.lua")
+dofile(modpath .. "Contact.lua")
+dofile(modpath .. "ConstraintSolver.lua")
+dofile(modpath .. "BlockCollider.lua")
+dofile(modpath .. "BlockColliderManagement.lua")
+-- some crappy test cubes
+dofile(modpath .. "testObj.lua")
+dofile(modpath .. "testObj2.lua")
+dofile(modpath .. "testObj3.lua")
+dofile(modpath .. "testObj4.lua")
+dofile(modpath .. "testObj5.lua")
