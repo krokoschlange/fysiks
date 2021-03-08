@@ -1,7 +1,7 @@
 fysiks.blockcolliders = {}
 fysiks.updatedBlockColliders = {}
 
-fysiks.BLOCKSIZE = 8
+fysiks.BLOCKSIZE = 4
 
 function fysiks.getBlockPos(pos)
 	return {
