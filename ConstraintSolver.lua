@@ -1,36 +1,15 @@
 fysiks.constraints = {}
 
-fysiks.t1 = 0
-fysiks.r1 = 0
-fysiks.t2 = 0
-fysiks.r2 = 0
-fysiks.t3 = 0
-fysiks.r3 = 0
-fysiks.t4 = 0
-fysiks.r4 = 0
-fysiks.t5 = 0
-fysiks.r5 = 0
-fysiks.t6 = 0
-fysiks.r6 = 0
-
-
 function fysiks.solveIslands(dtime)
-	local now = minetest.get_us_time()
 	for _, const in ipairs(fysiks.constraints) do
 		const:initWarmStart()
 		const:applyTmpLagMul()
 	end
-	fysiks.t1 = fysiks.t1 + minetest.get_us_time() - now
-	fysiks.r1 = fysiks.r1 + 1
 	local requiredAccuracy = 0.001 * math.pow(10, -dtime)
 	local maxIter = 30
 
-	local now = minetest.get_us_time()
 	local islands = fysiks.calculateConstraintIslands()
-	fysiks.t2 = fysiks.t2 + minetest.get_us_time() - now
-	fysiks.r2 = fysiks.r2 + 1
 
-	local now = minetest.get_us_time()
 	fysiks.constraints = {}
 	for _, island in ipairs(islands) do
 		local sendToSleep = true
@@ -50,18 +29,9 @@ function fysiks.solveIslands(dtime)
 			while iterations < maxIter and maxLagMul > requiredAccuracy do
 				maxLagMul = -1
 				for _, const in ipairs(island.constraints) do
-					local now = minetest.get_us_time()
 					const:calculateLagMul()
-					fysiks.t4 = fysiks.t4 + minetest.get_us_time() - now
-					fysiks.r4 = fysiks.r4 + 1
-					local now = minetest.get_us_time()
 					const:clampLagMult()
-					fysiks.t5 = fysiks.t5 + minetest.get_us_time() - now
-					fysiks.r5 = fysiks.r5 + 1
-					local now = minetest.get_us_time()
 					const:applyTmpLagMul()
-					fysiks.t6 = fysiks.t6 + minetest.get_us_time() - now
-					fysiks.r6 = fysiks.r6 + 1
 					local lagMul = const.tmpLagMul
 					for i = 1, lagMul:height(), 1 do
 						if math.abs(lagMul:get(i, 1)) > maxLagMul then
@@ -93,8 +63,6 @@ function fysiks.solveIslands(dtime)
 			end
 		end
 	end
-	fysiks.t3 = fysiks.t3 + minetest.get_us_time() - now
-	fysiks.r3 = fysiks.r3 + 1
 end
 
 function fysiks.constraintDFS(groupID, adjacent, visited, body, result)
