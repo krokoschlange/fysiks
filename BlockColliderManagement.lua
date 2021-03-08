@@ -1,11 +1,13 @@
 fysiks.blockcolliders = {}
 fysiks.updatedBlockColliders = {}
 
+fysiks.BLOCKSIZE = 8
+
 function fysiks.getBlockPos(pos)
 	return {
-		x = math.floor(pos.x / core.MAP_BLOCKSIZE),
-		y = math.floor(pos.y / core.MAP_BLOCKSIZE),
-		z = math.floor(pos.z / core.MAP_BLOCKSIZE)
+		x = math.floor(pos.x / fysiks.BLOCKSIZE),
+		y = math.floor(pos.y / fysiks.BLOCKSIZE),
+		z = math.floor(pos.z / fysiks.BLOCKSIZE)
 	}
 end
 

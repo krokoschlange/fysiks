@@ -18,17 +18,17 @@ end
 
 function fysiks.BlockCollider:getLocalPos(pos)
 	return {
-		x = pos.x - self.pos.x * core.MAP_BLOCKSIZE,
-		y = pos.y - self.pos.y * core.MAP_BLOCKSIZE,
-		z = pos.z - self.pos.z * core.MAP_BLOCKSIZE
+		x = pos.x - self.pos.x * fysiks.BLOCKSIZE,
+		y = pos.y - self.pos.y * fysiks.BLOCKSIZE,
+		z = pos.z - self.pos.z * cfysiks.BLOCKSIZE
 	}
 end
 
 function fysiks.BlockCollider:getNodePos(pos)
 	return {
-		x = self.pos.x * core.MAP_BLOCKSIZE + pos.x,
-		y = self.pos.y * core.MAP_BLOCKSIZE + pos.y,
-		z = self.pos.z * core.MAP_BLOCKSIZE + pos.z,
+		x = self.pos.x * fysiks.BLOCKSIZE + pos.x,
+		y = self.pos.y * fysiks.BLOCKSIZE + pos.y,
+		z = self.pos.z * fysiks.BLOCKSIZE + pos.z,
 	}
 end
 
@@ -42,11 +42,11 @@ end
 
 function fysiks.BlockCollider:calculateNodePositions()
 	self.nodes = {}
-	for x = 0, core.MAP_BLOCKSIZE - 1, 1 do
+	for x = 0, fysiks.BLOCKSIZE - 1, 1 do
 		self.nodes[x] = {}
-		for y = 0, core.MAP_BLOCKSIZE - 1, 1 do
+		for y = 0, fysiks.BLOCKSIZE - 1, 1 do
 			self.nodes[x][y] = {}
-			for z = 0, core.MAP_BLOCKSIZE - 1, 1 do
+			for z = 0, fysiks.BLOCKSIZE - 1, 1 do
 				local pos = self:getNodePos({x = x, y = y, z = z})
 				self.nodes[x][y][z] = self:nodeHasCollider(minetest.get_node(pos))
 			end
@@ -70,12 +70,12 @@ function fysiks.BlockCollider:recalculate()
 	self.colliders = {}
 	local boxes = {}
 
-	for y = 0, core.MAP_BLOCKSIZE - 1, 1 do
+	for y = 0, fysiks.BLOCKSIZE - 1, 1 do
 		boxes[y] = {}
-		for x = 0, core.MAP_BLOCKSIZE - 1, 1 do
+		for x = 0, fysiks.BLOCKSIZE - 1, 1 do
 			local box = nil
 			boxes[y][x] = {}
-			for z = 0, core.MAP_BLOCKSIZE - 1, 1 do
+			for z = 0, fysiks.BLOCKSIZE - 1, 1 do
 				if self.nodes[x][y][z] then
 					if box then
 						box.length = box.length + 1
@@ -95,8 +95,8 @@ function fysiks.BlockCollider:recalculate()
 		end
 	end
 
-	for y = 0, core.MAP_BLOCKSIZE - 1, 1 do
-		for x = 1, core.MAP_BLOCKSIZE - 1, 1 do
+	for y = 0, fysiks.BLOCKSIZE - 1, 1 do
+		for x = 1, fysiks.BLOCKSIZE - 1, 1 do
 			for _, box in ipairs(boxes[y][x]) do
 				local done = false
 				for k2, box2 in ipairs(boxes[y][x - 1]) do
@@ -114,8 +114,8 @@ function fysiks.BlockCollider:recalculate()
 		end
 	end
 
-	for y = 1, core.MAP_BLOCKSIZE - 1, 1 do
-		for x = 0, core.MAP_BLOCKSIZE - 1, 1 do
+	for y = 1, fysiks.BLOCKSIZE - 1, 1 do
+		for x = 0, fysiks.BLOCKSIZE - 1, 1 do
 			for _, box in ipairs(boxes[y][x]) do
 				local done = false
 				for k2, box2 in ipairs(boxes[y - 1][x]) do
@@ -133,8 +133,8 @@ function fysiks.BlockCollider:recalculate()
 		end
 	end
 
-	for y = 0, core.MAP_BLOCKSIZE - 1, 1 do
-		for x = 0, core.MAP_BLOCKSIZE - 1, 1 do
+	for y = 0, fysiks.BLOCKSIZE - 1, 1 do
+		for x = 0, fysiks.BLOCKSIZE - 1, 1 do
 			for _, box in ipairs(boxes[y][x]) do
 				local min = {
 					x = x - box.width + 0.5,
