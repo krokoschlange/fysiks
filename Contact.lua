@@ -42,29 +42,6 @@ function fysiks.Contact:new(a, b, aPoint, bPoint, normal, dtime)
 	c.tangentConstraint2.clampTop = true
 	c.tangentConstraint2.clampBottom = true
 	c:calculateTangentConstraints()
-
-	minetest.add_particle({
-		pos = aPoint,
-		velocity = {x = 0, y = 0, z = 0},
-		acceleration = {x = 0, y = 0, z = 0},
-		expirationtime = dtime,
-		size = 1,
-		collisiondetection = false,
-		vertical = false,
-		glow = 0,
-		texture = "default_mese_crystal.png"
-	})
-	minetest.add_particle({
-		pos = bPoint,
-		velocity = {x = 0, y = 0, z = 0},
-		acceleration = {x = 0, y = 0, z = 0},
-		expirationtime = dtime,
-		size = 1,
-		collisiondetection = false,
-		vertical = false,
-		glow = 0,
-		texture = "bubble.png"
-	})
 	return c
 end
 
