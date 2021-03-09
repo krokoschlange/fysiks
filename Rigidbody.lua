@@ -99,6 +99,10 @@ function fysiks.Rigidbody:integrateVelocity(dtime)
 	end
 	if not self.asleep then
 		local acc = vector.divide(self.resultantForce, self.mass)
+		if minetest.settings:get("fysiks_use_velocities") == "before" then
+			print("pre")
+			self.object:add_velocity(vector.subtract(self.velocity, self.object:get_velocity()))
+		end
 		self.velocity = vector.add(self.velocity, vector.multiply(acc, dtime))
 
 		local angAcc = self.invInertiaTensor * vector.toMatrix(self.resultantTorque)
@@ -144,9 +148,15 @@ function fysiks.Rigidbody:finishStep(dtime)
 
 	if not self.static and not self.asleep then
 		self.position = vector.add(self.position, vector.multiply(self.velocity, dtime))
-		self.object:set_pos(self.position)
+		if vector.distance(self.object:get_pos(), self.position) > 0.05 then
+			self.object:set_pos(self.position)
+		end
 
 		self.rotation = Matrix:axisAngle(vector.multiply(self.angularVelocity, dtime)) * self.rotation
+		if minetest.settings:get("fysiks_use_velocities") == "after" then
+			print("post")
+			self.object:add_velocity(vector.subtract(self.velocity, self.object:get_velocity()))
+		end
 	else
 		self.object:set_velocity(vector.new())
 	end
@@ -156,7 +166,7 @@ function fysiks.Rigidbody:finishStep(dtime)
 
 	for k, v in pairs(self.collisionBoxes) do
 		v:setRotation(self.rotation)
-		v:setPosition(self.object:get_pos())
+		v:setPosition(self.position)
 	end
 
 	if vector.length(self.velocity) < 0.1 and vector.length(self.angularVelocity) < 0.1 then

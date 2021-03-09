@@ -1,0 +1,5 @@
+#    Use object velocities for smoother object movement.
+#    It looks somewhat jerky though.
+#    before - set velocities before each step
+#    after - set velocities after each step
+fysiks_use_velocities (Use Object Velocities) enum none none,before,after
