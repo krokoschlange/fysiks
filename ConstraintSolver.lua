@@ -1,12 +1,14 @@
 fysiks.constraints = {}
 
+fysiks.constraintAccuracy = minetest.settings:get("fysiks_constraint_accuracy") or 0.001
+fysiks.maxIterations = minetest.settings:get("fysiks_max_constraint_iterations") or 30
+
 function fysiks.solveIslands(dtime)
 	for _, const in ipairs(fysiks.constraints) do
 		const:initWarmStart()
 		const:applyTmpLagMul()
 	end
-	local requiredAccuracy = 0.001 * math.pow(10, -dtime)
-	local maxIter = 30
+	local requiredAccuracy = fysiks.constraintAccuracy * math.pow(10, -dtime)
 
 	local islands = fysiks.calculateConstraintIslands()
 
@@ -26,7 +28,7 @@ function fysiks.solveIslands(dtime)
 
 			local maxLagMul = 100
 			local iterations = 0
-			while iterations < maxIter and maxLagMul > requiredAccuracy do
+			while iterations < fysiks.maxIterations and maxLagMul > requiredAccuracy do
 				maxLagMul = -1
 				for _, const in ipairs(island.constraints) do
 					const:calculateLagMul()

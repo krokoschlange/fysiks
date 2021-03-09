@@ -12,9 +12,9 @@ fysiks.Contact = {
 	normalConstraint = nil,
 	tangentConstraint1 = nil,
 	tangentConstraint2 = nil,
-	baumgarte = 0.25,
-	penSlop = 0.1,
-	resSlop = 1,
+	baumgarte = minetest.settings:get("fysiks_baumgarte") or 0.25,
+	penSlop = minetest.settings:get("fysiks_pen_slop") or 0.1,
+	resSlop = minetest.settings:get("fysiks_res_slop") or 1,
 	persistentThresh = 0.07
 }
 fysiks.Contact.__index = fysiks.Contact

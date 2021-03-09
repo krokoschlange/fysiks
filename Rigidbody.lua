@@ -1,6 +1,8 @@
 --make sure unpack works with all lua versions
 local unpack = unpack or table.unpack
 
+fysiks.use_velocities = minetest.settings:get("fysiks_use_velocities")
+
 fysiks.nextID = 0
 
 function fysiks.getNextID()
@@ -20,7 +22,7 @@ fysiks.INV_STATIC_I = Matrix:new({
 	{0, 0, 0}
 })
 
-fysiks.SLEEP_TIME = 10
+fysiks.SLEEP_TIME = minetest.settings:get("fysiks_sleep_time") or 10
 
 fysiks.Rigidbody = {
 	fysiks = true,
@@ -99,8 +101,7 @@ function fysiks.Rigidbody:integrateVelocity(dtime)
 	end
 	if not self.asleep then
 		local acc = vector.divide(self.resultantForce, self.mass)
-		if minetest.settings:get("fysiks_use_velocities") == "before" then
-			print("pre")
+		if fysiks.use_velocities == "before" then
 			self.object:add_velocity(vector.subtract(self.velocity, self.object:get_velocity()))
 		end
 		self.velocity = vector.add(self.velocity, vector.multiply(acc, dtime))
@@ -153,8 +154,7 @@ function fysiks.Rigidbody:finishStep(dtime)
 		end
 
 		self.rotation = Matrix:axisAngle(vector.multiply(self.angularVelocity, dtime)) * self.rotation
-		if minetest.settings:get("fysiks_use_velocities") == "after" then
-			print("post")
+		if fysiks.use_velocities == "after" then
 			self.object:add_velocity(vector.subtract(self.velocity, self.object:get_velocity()))
 		end
 	else

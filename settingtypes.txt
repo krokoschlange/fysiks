@@ -3,3 +3,25 @@
 #    before - set velocities before each step
 #    after - set velocities after each step
 fysiks_use_velocities (Use Object Velocities) enum none none,before,after
+
+#    Baumgarte Stabilization Value used during object collision
+#    It counters object penetration
+fysiks_baumgarte (Baumgarte Stabilization Value) float 0.25 0 1
+
+#    Penetration slop.
+#    Penetrations that are up to this deep will be ignored. 
+fysiks_pen_slop (Penetration Slop) float 0.1 0 10
+
+#    Restitution slop.
+#    Increases stability during bouncing.
+fysiks_res_slop (Restitution Slop) float 1 0 10
+
+#    Required constraint accuracy.
+#    Smaller is more accurate
+fysiks_constraint_accuracy (Constraint Accuracy) float 0.001 0 1
+
+#    Maximum Constraint Iterations per game step
+fysiks_max_constraint_iterations (Max Iterations) int 30 1 1000
+
+#    Amount of game steps after which inactive objects fall asleep
+fysiks_sleep_time (Sleep time) int 10 1 1000
