@@ -482,7 +482,21 @@ function fysiks.narrowPhase(aabbPairs, dtime)
 			local objA = boundingVolume1.object
 			local objB = boundingVolume2.object
 			local collisionPair = fysiks.getCollisionPair(boundingVolume1, boundingVolume2)
-			local oneshot = (collisionPair == nil)
+			local pairInvalid = false
+			if collisionPair then
+				for _, contact in ipairs(collisionPair.contacts) do
+					if contact:isValid() then
+						contact:recalculate(dtime)
+					else
+						pairInvalid = true
+					end
+				end
+			end
+
+			local oneshot = (collisionPair == nil) or pairInvalid
+			if oneshot and collisionPair then
+				collisionPair.contactRemovedSinceLastOneshot = false
+			end
 			local contacts1, contacts2 = fysiks.createContacts(boundingVolume1, boundingVolume2, normal, epaPoly, epaFace, pointIdx, oneshot)
 			local nnormal = vector.normalize(normal)
 			local contacts = {}
@@ -493,28 +507,25 @@ function fysiks.narrowPhase(aabbPairs, dtime)
 			end
 			--table.sort(contacts, function(a, b) return a.depth < b.depth end)
 			--TODO: dont make pairs of bodies, use colliders instead
-			if collisionPair == nil then
+			if collisionPair == nil or oneshot then
 				collisionPair = {
 					a = objA,
 					b = objB,
 					collA = boundingVolume1,
 					collB = boundingVolume2,
 					contacts = contacts,
-					currentStep = true
+					currentStep = true,
+					contactRemovedSinceLastOneshot = false
 				}
 				fysiks.addCollisionPair(boundingVolume1, boundingVolume2, collisionPair)
 			else
 				collisionPair.currentStep = true
 				local newContact = contacts[1]
-				local newContacts = {}
+				local newContacts = collisionPair.contacts
 				local double = false
 				for _, contact in ipairs(collisionPair.contacts) do
-					if contact:isValid() then
-						contact:recalculate(dtime)
-						table.insert(newContacts, contact)
-						if contact:isSimilar(newContact) then
-							double = true
-						end
+					if contact:isSimilar(newContact) then
+						double = true
 					end
 				end
 				if not double then
