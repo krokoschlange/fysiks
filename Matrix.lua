@@ -5,18 +5,32 @@ Matrix.__index = Matrix
 
 function Matrix:new(m, n, x)
 	local o = setmetatable({}, self)
-	o.M = {}
 	if (m == nil or type(m) == "number") then
 		m = m or 3
 		n = n or 3
 		x = x or 0
-		for i = 1, m do
-			table.insert(o.M, {})
-			for j = 1, n do
-				table.insert(o.M[i], x)
+		if m <= 12 then
+			o.M = fysiks.createTable[m]()
+		else
+			o.M = {}
+		end
+		if false and n <= 12 then
+			for i = 1, m do
+				o.M[i] = fysiks.createTable[n]()
+				for j = 1, n do
+					o.M[i][j] = x
+				end
+			end
+		else
+			for i = 1, m do
+				o.M[i] = {}
+				for j = 1, n do
+					o.M[i][j] = x
+				end
 			end
 		end
 	elseif m.M ~= nil then
+		o.M = {}
 		for i = 1, #m.M do
 			table.insert(o.M, {})
 			for j = 1, #m.M[1] do
@@ -84,36 +98,6 @@ function Matrix:axisAngle(vec)
 end
 
 function Matrix:toEuler()
-	--[[local sy = math.sqrt(self.M[1][1]^2 + self.M[2][1]^2)
-	local singular = sy < 1e-6
-
-	local eu = {x = 0, y = 0, z = 0}
-	if not singular then
-		eu.x = math.atan2(self.M[3][2], self.M[3][3])
-		eu.y = math.atan2(-self.M[3][1], sy)
-		eu.z = math.atan2(self.M[2][1], self.M[1][1])
-	else
-		eu.x = math.atan2(-self.M[2][3], self.M[2][2])
-		eu.y = math.atan2(-self.M[3][1], sy)
-		eu.z = 0
-	end
-	return eu]]
-
-	--[[local sy = math.sqrt(self.M[1][1]^2 + self.M[1][2]^2)
-	local singular = sy < 1e-6
-
-	local eu = {x = 0, y = 0, z = 0}
-	if not singular then
-		eu.x = math.atan2(self.M[2][3], self.M[3][3])
-		eu.y = -math.atan2(-self.M[1][3], sy)
-		eu.z = math.atan2(self.M[1][2], self.M[1][1])
-	else
-		eu.x = math.atan2(-self.M[3][2], self.M[2][2])
-		eu.y = -math.atan2(-self.M[1][3], sy)
-		eu.z = 0
-	end
-	return eu]]
-
 	local singular = 1 - math.abs(self.M[2][3]) < 1e-6
 
 	if not singular then

@@ -101,7 +101,7 @@ function fysiks.Contact:calculateTangentConstraints()
 	local aRot1 = vector.cross(invALever, self.tangent1)
 	local bLever = vector.subtract(self.bPoint, self.bodyB.position)
 	local bRot1 = vector.cross(bLever, self.tangent1)
-	self.tangentConstraint1.jacobian.M = {{
+	self.tangentConstraint1:setJacobianM({{
 		-self.tangent1.x,
 		-self.tangent1.y,
 		-self.tangent1.z,
@@ -114,10 +114,10 @@ function fysiks.Contact:calculateTangentConstraints()
 		bRot1.x,
 		bRot1.y,
 		bRot1.z
-	}}
+	}})
 	local aRot2 = vector.cross(invALever, self.tangent2)
 	local bRot2 = vector.cross(bLever, self.tangent2)
-	self.tangentConstraint2.jacobian.M = {{
+	self.tangentConstraint2:setJacobianM({{
 		-self.tangent2.x,
 		-self.tangent2.y,
 		-self.tangent2.z,
@@ -130,7 +130,7 @@ function fysiks.Contact:calculateTangentConstraints()
 		bRot2.x,
 		bRot2.y,
 		bRot2.z
-	}}
+	}})
 end
 
 function fysiks.Contact:calculateContactConstraint(dtime)
@@ -139,7 +139,7 @@ function fysiks.Contact:calculateContactConstraint(dtime)
 	local aRot = vector.cross(invALever, self.normal)
 	local bLever = vector.subtract(self.bPoint, self.bodyB.position)
 	local bRot = vector.cross(bLever, self.normal)
-	self.normalConstraint.jacobian.M = {{
+	self.normalConstraint:setJacobianM({{
 		-self.normal.x,
 		-self.normal.y,
 		-self.normal.z,
@@ -152,7 +152,7 @@ function fysiks.Contact:calculateContactConstraint(dtime)
 		bRot.x,
 		bRot.y,
 		bRot.z
-	}}
+	}})
 	local bias = (-(self.baumgarte / dtime)) * math.max(self.depth - self.penSlop, 0)
 
 	local aPointVel = vector.add(self.bodyA.velocity, vector.cross(self.bodyA.angularVelocity, aLever))

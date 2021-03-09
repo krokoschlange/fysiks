@@ -1,10 +1,13 @@
 fysiks.Constraint = {
 	jacobian = nil,
+	jacobianT = nil,
 	bias = nil,
 	bodyA = nil,
 	bodyB = nil,
-	mass = nil,
-	massInv = nil,
+	maInv = nil,
+	mbInv = nil,
+	IaInv = nil,
+	IbInv = nil,
 	lagMultSum = nil,
 	tmpLagMul = nil,
 	clampTop = false,
@@ -22,44 +25,13 @@ function fysiks.Constraint:new(jacobian, bias, a, b)
 	c.bodyB = b
 
 	if a and b then
-		--local Ia = a:getInertiaTensor()
-		--local Ib = b:getInertiaTensor()
-		local IaInv = a:getInvInertiaTensor()
-		local IbInv = b:getInvInertiaTensor()
-		--[[c.mass = Matrix:new({
-			{a:getMass(), 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
-			{0, a:getMass(), 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
-			{0, 0, a:getMass(), 0, 0, 0, 0, 0, 0, 0, 0, 0},
-			{0, 0, 0, Ia:get(1, 1), Ia:get(1, 2), Ia:get(1, 3), 0, 0, 0, 0, 0, 0},
-			{0, 0, 0, Ia:get(2, 1), Ia:get(2, 2), Ia:get(2, 3), 0, 0, 0, 0, 0, 0},
-			{0, 0, 0, Ia:get(3, 1), Ia:get(3, 2), Ia:get(3, 3), 0, 0, 0, 0, 0, 0},
-			{0, 0, 0, 0, 0, 0, b:getMass(), 0, 0, 0, 0, 0},
-			{0, 0, 0, 0, 0, 0, 0, b:getMass(), 0, 0, 0, 0},
-			{0, 0, 0, 0, 0, 0, 0, 0, b:getMass(), 0, 0, 0},
-			{0, 0, 0, 0, 0, 0, 0, 0, 0, Ib:get(1, 1), Ib:get(1, 2), Ib:get(1, 3)},
-			{0, 0, 0, 0, 0, 0, 0, 0, 0, Ib:get(2, 1), Ib:get(2, 2), Ib:get(2, 3)},
-			{0, 0, 0, 0, 0, 0, 0, 0, 0, Ib:get(3, 1), Ib:get(3, 2), Ib:get(3, 3)}
-		})]]
-		--c.massInv = c.mass:inverse() --don't do this, it takes ages
-		--do this instead
-		local maInv = a:getInvMass()
-		local mbInv = b:getInvMass()
-		c.massInv = Matrix:new({
-			{maInv, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
-			{0, maInv, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
-			{0, 0, maInv, 0, 0, 0, 0, 0, 0, 0, 0, 0},
-			{0, 0, 0, IaInv:get(1, 1), IaInv:get(1, 2), IaInv:get(1, 3), 0, 0, 0, 0, 0, 0},
-			{0, 0, 0, IaInv:get(2, 1), IaInv:get(2, 2), IaInv:get(2, 3), 0, 0, 0, 0, 0, 0},
-			{0, 0, 0, IaInv:get(3, 1), IaInv:get(3, 2), IaInv:get(3, 3), 0, 0, 0, 0, 0, 0},
-			{0, 0, 0, 0, 0, 0, mbInv, 0, 0, 0, 0, 0},
-			{0, 0, 0, 0, 0, 0, 0, mbInv, 0, 0, 0, 0},
-			{0, 0, 0, 0, 0, 0, 0, 0, mbInv, 0, 0, 0},
-			{0, 0, 0, 0, 0, 0, 0, 0, 0, IbInv:get(1, 1), IbInv:get(1, 2), IbInv:get(1, 3)},
-			{0, 0, 0, 0, 0, 0, 0, 0, 0, IbInv:get(2, 1), IbInv:get(2, 2), IbInv:get(2, 3)},
-			{0, 0, 0, 0, 0, 0, 0, 0, 0, IbInv:get(3, 1), IbInv:get(3, 2), IbInv:get(3, 3)}
-		})
+		c.IaInv = a:getInvInertiaTensor()
+		c.IbInv = b:getInvInertiaTensor()
+		c.maInv = a:getInvMass()
+		c.mbInv = b:getInvMass()
 	end
 	if jacobian then
+		c:setJacobianM(jacobian.M)
 		c.lagMultSum = Matrix:new(jacobian:height(), 1)
 		c.tmpLagMul = Matrix:new(jacobian:height(), 1)
 	end
@@ -67,50 +39,82 @@ function fysiks.Constraint:new(jacobian, bias, a, b)
 	return c
 end
 
+function fysiks.Constraint:setJacobianM(jacobianM)
+	self.jacobian.M = jacobianM
+	self.jacobianT = self.jacobian:transposed()
+end
 
 function fysiks.Constraint:calculateLagMul()
 	local vel = Matrix:new({
-		{self.bodyA.tmpConstraintVel:get(1, 1)},
-		{self.bodyA.tmpConstraintVel:get(2, 1)},
-		{self.bodyA.tmpConstraintVel:get(3, 1)},
-		{self.bodyA.tmpConstraintVel:get(4, 1)},
-		{self.bodyA.tmpConstraintVel:get(5, 1)},
-		{self.bodyA.tmpConstraintVel:get(6, 1)},
-		{self.bodyB.tmpConstraintVel:get(1, 1)},
-		{self.bodyB.tmpConstraintVel:get(2, 1)},
-		{self.bodyB.tmpConstraintVel:get(3, 1)},
-		{self.bodyB.tmpConstraintVel:get(4, 1)},
-		{self.bodyB.tmpConstraintVel:get(5, 1)},
-		{self.bodyB.tmpConstraintVel:get(6, 1)}
+		{self.bodyA.tmpConstraintVel.M[1][1]},
+		{self.bodyA.tmpConstraintVel.M[2][1]},
+		{self.bodyA.tmpConstraintVel.M[3][1]},
+		{self.bodyA.tmpConstraintVel.M[4][1]},
+		{self.bodyA.tmpConstraintVel.M[5][1]},
+		{self.bodyA.tmpConstraintVel.M[6][1]},
+		{self.bodyB.tmpConstraintVel.M[1][1]},
+		{self.bodyB.tmpConstraintVel.M[2][1]},
+		{self.bodyB.tmpConstraintVel.M[3][1]},
+		{self.bodyB.tmpConstraintVel.M[4][1]},
+		{self.bodyB.tmpConstraintVel.M[5][1]},
+		{self.bodyB.tmpConstraintVel.M[6][1]}
 	})
-	local num = ((self.jacobian * -1) * vel - self.bias)
-	local den = (self.jacobian * self.massInv) * self.jacobian:transposed()
+	local num = (self.jacobian * vel) * -1 - self.bias
+	local JxMI = Matrix:newCheap({{
+		self.jacobian.M[1][1] * self.maInv,
+		self.jacobian.M[1][2] * self.maInv,
+		self.jacobian.M[1][3] * self.maInv,
+		self.jacobian.M[1][4] * self.IaInv.M[1][1] + self.jacobian.M[1][5] * self.IaInv.M[2][1] + self.jacobian.M[1][6] * self.IaInv.M[3][1],
+		self.jacobian.M[1][4] * self.IaInv.M[1][2] + self.jacobian.M[1][5] * self.IaInv.M[2][2] + self.jacobian.M[1][6] * self.IaInv.M[3][2],
+		self.jacobian.M[1][4] * self.IaInv.M[1][3] + self.jacobian.M[1][5] * self.IaInv.M[2][3] + self.jacobian.M[1][6] * self.IaInv.M[3][3],
+		self.jacobian.M[1][7] * self.mbInv,
+		self.jacobian.M[1][8] * self.mbInv,
+		self.jacobian.M[1][9] * self.mbInv,
+		self.jacobian.M[1][10] * self.IbInv.M[1][1] + self.jacobian.M[1][11] * self.IbInv.M[2][1] + self.jacobian.M[1][12] * self.IbInv.M[3][1],
+		self.jacobian.M[1][10] * self.IbInv.M[1][2] + self.jacobian.M[1][11] * self.IbInv.M[2][2] + self.jacobian.M[1][12] * self.IbInv.M[3][2],
+		self.jacobian.M[1][10] * self.IbInv.M[1][3] + self.jacobian.M[1][11] * self.IbInv.M[2][3] + self.jacobian.M[1][12] * self.IbInv.M[3][3],
+	}})
+	local den = JxMI * self.jacobianT
 	local deninv = (den):inverse()
 	self.tmpLagMul = deninv * num
 end
 
 function fysiks.Constraint:applyTmpLagMul()
-	local deltaVel = self.massInv * self.jacobian:transposed() * self.tmpLagMul
+	local MIxJT = Matrix:newCheap({
+		{self.maInv * self.jacobianT.M[1][1]},
+		{self.maInv * self.jacobianT.M[2][1]},
+		{self.maInv * self.jacobianT.M[3][1]},
+		{self.IaInv.M[1][1] * self.jacobianT.M[4][1] + self.IaInv.M[1][2] * self.jacobianT.M[5][1] + self.IaInv.M[1][3] * self.jacobianT.M[6][1]},
+		{self.IaInv.M[2][1] * self.jacobianT.M[4][1] + self.IaInv.M[2][2] * self.jacobianT.M[5][1] + self.IaInv.M[2][3] * self.jacobianT.M[6][1]},
+		{self.IaInv.M[3][1] * self.jacobianT.M[4][1] + self.IaInv.M[3][2] * self.jacobianT.M[5][1] + self.IaInv.M[3][3] * self.jacobianT.M[6][1]},
+		{self.mbInv * self.jacobianT.M[7][1]},
+		{self.mbInv * self.jacobianT.M[8][1]},
+		{self.mbInv * self.jacobianT.M[9][1]},
+		{self.IbInv.M[1][1] * self.jacobianT.M[10][1] + self.IbInv.M[1][2] * self.jacobianT.M[11][1] + self.IbInv.M[1][3] * self.jacobianT.M[12][1]},
+		{self.IbInv.M[2][1] * self.jacobianT.M[10][1] + self.IbInv.M[2][2] * self.jacobianT.M[11][1] + self.IbInv.M[2][3] * self.jacobianT.M[12][1]},
+		{self.IbInv.M[3][1] * self.jacobianT.M[10][1] + self.IbInv.M[3][2] * self.jacobianT.M[11][1] + self.IbInv.M[3][3] * self.jacobianT.M[12][1]},
+	})
+	local deltaVel = MIxJT * self.tmpLagMul
 
 	local aTmpVel = self.bodyA.tmpConstraintVel
 	local bTmpVel = self.bodyB.tmpConstraintVel
 
-	self.bodyA.tmpConstraintVel = Matrix:new({
-		{aTmpVel:get(1, 1) + deltaVel:get(1, 1)},
-		{aTmpVel:get(2, 1) + deltaVel:get(2, 1)},
-		{aTmpVel:get(3, 1) + deltaVel:get(3, 1)},
-		{aTmpVel:get(4, 1) + deltaVel:get(4, 1)},
-		{aTmpVel:get(5, 1) + deltaVel:get(5, 1)},
-		{aTmpVel:get(6, 1) + deltaVel:get(6, 1)},
-	})
-	self.bodyB.tmpConstraintVel = Matrix:new({
-		{bTmpVel:get(1, 1) + deltaVel:get(7, 1)},
-		{bTmpVel:get(2, 1) + deltaVel:get(8, 1)},
-		{bTmpVel:get(3, 1) + deltaVel:get(9, 1)},
-		{bTmpVel:get(4, 1) + deltaVel:get(10, 1)},
-		{bTmpVel:get(5, 1) + deltaVel:get(11, 1)},
-		{bTmpVel:get(6, 1) + deltaVel:get(12, 1)},
-	})
+	self.bodyA.tmpConstraintVel.M = {
+		{aTmpVel.M[1][1] + deltaVel.M[1][1]},
+		{aTmpVel.M[2][1] + deltaVel.M[2][1]},
+		{aTmpVel.M[3][1] + deltaVel.M[3][1]},
+		{aTmpVel.M[4][1] + deltaVel.M[4][1]},
+		{aTmpVel.M[5][1] + deltaVel.M[5][1]},
+		{aTmpVel.M[6][1] + deltaVel.M[6][1]},
+	}
+	self.bodyB.tmpConstraintVel.M = {
+		{bTmpVel.M[1][1] + deltaVel.M[7][1]},
+		{bTmpVel.M[2][1] + deltaVel.M[8][1]},
+		{bTmpVel.M[3][1] + deltaVel.M[9][1]},
+		{bTmpVel.M[4][1] + deltaVel.M[10][1]},
+		{bTmpVel.M[5][1] + deltaVel.M[11][1]},
+		{bTmpVel.M[6][1] + deltaVel.M[12][1]},
+	}
 end
 
 function fysiks.Constraint:apply()

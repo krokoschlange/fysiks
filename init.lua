@@ -1,6 +1,7 @@
 fysiks = {}
 
 local modpath = minetest.get_modpath("fysiks") .. "/"
+dofile(modpath .. "TableHelpers.lua")
 dofile(modpath .. "Vector.lua")
 dofile(modpath .. "Matrix.lua")
 dofile(modpath .. "BoundingVolume.lua")
