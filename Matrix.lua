@@ -29,8 +29,14 @@ function Matrix:new(m, n, x)
 	return o
 end
 
+function Matrix:newCheap(m)
+	local o = setmetatable({}, self)
+	o.M = m
+	return o
+end
+
 function Matrix:rotationX(angle)
-	return Matrix:new({
+	return Matrix:newCheap({
 		{1,					0,					 0},
 		{0,   math.cos(angle),     math.sin(angle)},
 		{0, - math.sin(angle),     math.cos(angle)}
@@ -38,7 +44,7 @@ function Matrix:rotationX(angle)
 end
 
 function Matrix:rotationY(angle)
-	return Matrix:new({
+	return Matrix:newCheap({
 		{ math.cos(angle), 0, - math.sin(angle)},
 		{				0, 1,				 0},
 		{ math.sin(angle), 0,   math.cos(angle)}
@@ -46,7 +52,7 @@ function Matrix:rotationY(angle)
 end
 
 function Matrix:rotationZ(angle)
-	return Matrix:new({
+	return Matrix:newCheap({
 		{     math.cos(angle),    math.sin(angle), 0},
 		{   - math.sin(angle),    math.cos(angle), 0},
 		{					0,					0, 1}
@@ -70,7 +76,7 @@ function Matrix:axisAngle(vec)
 	local c = math.cos(a)
 	local s = math.sin(a)
 	local ci = 1 - c
-	return Matrix:new({
+	return Matrix:newCheap({
 		{x * x * ci + c, x * y * ci - z * s, x * z * ci + y * s},
 		{y * x * ci + z * s, y * y * ci + c, y * z * ci - x * s},
 		{z * x * ci - y * s, z * y * ci + x * s, z * z * ci + c}
@@ -153,7 +159,7 @@ function Matrix:__add(other)
 	local m = Matrix:new(self:height(), self:width())
 	for i = 1, self:height() do
 		for j = 1, self:width() do
-			m:set(i, j, self:get(i, j) + other:get(i, j))
+			m.M[i][j] = self.M[i][j] + other.M[i][j]
 		end
 	end
 	return m
@@ -166,7 +172,7 @@ function Matrix:__sub(other)
 	local m = Matrix:new(self:height(), self:width())
 	for i = 1, self:height() do
 		for j = 1, self:width() do
-			m:set(i, j, self:get(i, j) - other:get(i, j))
+			m.M[i][j] = self.M[i][j] - other.M[i][j]
 		end
 	end
 	return m
@@ -177,19 +183,40 @@ function Matrix:__mul(other)
 		if self:width() ~= other:height() then
 			return nil
 		end
-		local m = Matrix:new(self:height(), other:width())
+
 		if self:height() == 1 and self:width() == 1 then
-			return other * self:get(1, 1)
+			return other * self.M[1][1]
 		elseif other:height() == 1 and other:width() == 1 then
-			return self * other:get(1, 1)
+			return self * other.M[1][1]
+		elseif self:width() == 3 and self:height() == 3 and other:width() == 1 and other:height() == 3 then
+			local m = Matrix:new(3, 1, 0)
+			for i = 1, 3, 1 do
+				local x = 0
+				for k = 1, 3, 1 do
+					x = x + self.M[i][k] * other.M[k][1]
+				end
+				m.M[i][1] = x
+			end
+			return m
+		elseif self:width() == 3 and self:height() == 1 and other:width() == 3 and other:height() == 3 then
+			local m = Matrix:new(1, 3, 0)
+			for j = 1, 3, 1 do
+				local x = 0
+				for k = 1, 3, 1 do
+					x = x + self.M[1][k] * other.M[k][j]
+				end
+				m.M[1][j] = x
+			end
+			return m
 		else
+			local m = Matrix:new(self:height(), other:width())
 			for i = 1, self:height() do
 				for j = 1, other:width() do
 					local elem = 0
 					for k = 1, self:width() do
-						elem = elem + self:get(i, k) * other:get(k, j)
+						elem = elem + self.M[i][k] * other.M[k][j]
 					end
-					m:set(i, j, elem)
+					m.M[i][j] = elem
 				end
 			end
 			return m
@@ -198,7 +225,7 @@ function Matrix:__mul(other)
 		local m = Matrix:new(self:height(), self:width())
 		for i = 1, self:height() do
 			for j = 1, self:width() do
-				m:set(i, j, self:get(i, j) * other)
+				m.M[i][j] = self.M[i][j] * other
 			end
 		end
 		return m
@@ -210,21 +237,16 @@ function Matrix:transpose()
 	for i = 1, self:width() do
 		table.insert(newM, {})
 		for j = 1, self:height() do
-			table.insert(newM[i], self:get(j, i))
+			table.insert(newM[i], self.M[j][i])
 		end
 	end
 	self.M = newM
 end
 
 function Matrix:transposed()
-	local newM = {}
-	for i = 1, self:width() do
-		table.insert(newM, {})
-		for j = 1, self:height() do
-			table.insert(newM[i], self:get(j, i))
-		end
-	end
-	return Matrix:new(newM)
+	local ret = Matrix:newCheap(self.M)
+	ret:transpose()
+	return ret
 end
 
 function Matrix:submatrix(i, j)
@@ -246,12 +268,22 @@ function Matrix:submatrix(i, j)
 					else
 						x = l - 1
 					end
-					sub:set(y, x, self:get(k, l))
+					sub.M[y][x] = self.M[k][l]
 				end
 			end
 		end
 	end
 	return sub
+end
+
+function Matrix:getBlock(i, j, h, w)
+	local ret = Matrix:new(h, w)
+	for k = 1, h, 1 do
+		for l = 1, w, 1 do
+			ret.M[k][l] = self.M[i + k - 1][j + l - 1]
+		end
+	end
+	return ret
 end
 
 function Matrix:determinant()
@@ -261,10 +293,10 @@ function Matrix:determinant()
 	local tmp = Matrix:new(self)
 	local det = 1
 	for i = 1, tmp:width() do
-		if tmp:get(i, i) == 0 then
+		if tmp.M[i][i] == 0 then
 			local solved = false
 			for k = i + 1, tmp:height() do
-				if tmp:get(k, i) ~= 0 then
+				if tmp.M[k][i] ~= 0 then
 					tmp:swapRows(i, k)
 					solved = true
 					det = det * -1
@@ -276,8 +308,8 @@ function Matrix:determinant()
 			end
 		end
 		for j = i + 1, tmp:height() do
-			if tmp:get(j, i) ~= 0 then
-				local fac = -tmp:get(i, i) / tmp:get(j, i)
+			if tmp.M[j][i] ~= 0 then
+				local fac = -tmp.M[i][i] / tmp.M[j][i]
 				det = det * (1 / fac)
 				tmp:multiplyRow(j, fac)
 				tmp:addRows(i, j)
@@ -285,21 +317,21 @@ function Matrix:determinant()
 		end
 	end
 	for i = 1, self:height() do
-		det = det * tmp:get(i, i)
+		det = det * tmp.M[i][i]
 	end
 	return det
 end
 
 function Matrix:multiplyRow(row, x)
 	for i = 1, self:width() do
-		self:set(row, i, self:get(row, i) * x)
+		self.M[row][i] = self.M[row][i] * x
 	end
 end
 
 --add row1 to row2
 function Matrix:addRows(row1, row2)
 	for i = 1, self:width() do
-		self:set(row2, i, self:get(row1, i) + self:get(row2, i))
+		self.M[row2][i] = self.M[row1][i] + self.M[row2][i]
 	end
 end
 
@@ -319,7 +351,7 @@ end
 
 function Matrix:inverse()
 	if self:width() == 1 and self:height() == 1 then
-		return Matrix:new(1, 1, 1 / self:get(1, 1))
+		return Matrix:new(1, 1, 1 / self.M[1][1])
 	end
 	local det = self:determinant()
 	if det == 0 then
@@ -334,7 +366,7 @@ function Matrix:adjugate()
 	local adj = Matrix:new(self:height(), self:width())
 	for i = 1, self:height() do
 		for j = 1, self:width() do
-			adj:set(i, j, self:cofactor(i, j))
+			adj.M[i][j] = self:cofactor(i, j)
 		end
 	end
 	adj:transpose()
