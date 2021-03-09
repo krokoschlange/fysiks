@@ -598,7 +598,8 @@ function fysiks.detectCollisions(dtime)
 
 	local allObjs = minetest.object_refs
 	local boundingVolumes = {}
-	for _, obj in pairs(allObjs) do
+	local entities
+	for k, obj in pairs(allObjs) do
 		if obj:get_luaentity() and obj:get_luaentity().fysiks then
 			obj:get_luaentity():prepareStep(dtime)
 			if obj:get_luaentity().collisionBoxes then
@@ -609,8 +610,15 @@ function fysiks.detectCollisions(dtime)
 					end
 				end
 			end
+		else
+			fysiks.updateEntityCollider(k, obj)
+			if fysiks.entitycolliders[k] then
+				table.insert(boundingVolumes, fysiks.entitycolliders[k].coll)
+			end
 		end
 	end
+
+	fysiks.checkEntityColliders(allObjs)
 
 	local aabbPairs = fysiks.broadPhase(boundingVolumes)
 

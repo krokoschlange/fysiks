@@ -19,6 +19,7 @@ dofile(modpath .. "Contact.lua")
 dofile(modpath .. "ConstraintSolver.lua")
 dofile(modpath .. "BlockCollider.lua")
 dofile(modpath .. "BlockColliderManagement.lua")
+dofile(modpath .. "EntityColliders.lua")
 -- some crappy test cubes
 dofile(modpath .. "testObj.lua")
 dofile(modpath .. "testObj2.lua")
