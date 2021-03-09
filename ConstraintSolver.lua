@@ -76,7 +76,7 @@ function fysiks.constraintDFS(groupID, adjacent, visited, body, result)
 		for _, neighbour in ipairs(adjacent[body.fysiksID]) do
 			local neighbourVisited = visited[neighbour.fysiksID]
 			if not neighbourVisited or (neighbourVisited ~= true and neighbourVisited ~= groupID) then
-				fysiks.constraintDFS(groupID, adjacent, visited, neighbour, result, constraints)
+				fysiks.constraintDFS(groupID, adjacent, visited, neighbour, result)
 			end
 		end
 	end
