@@ -8,6 +8,8 @@ fysiks.Constraint = {
 	mbInv = nil,
 	IaInv = nil,
 	IbInv = nil,
+	JxMIxJT_I = nil,
+	MIxJT = nil,
 	lagMultSum = nil,
 	tmpLagMul = nil,
 	clampTop = false,
@@ -42,6 +44,21 @@ end
 function fysiks.Constraint:setJacobianM(jacobianM)
 	self.jacobian.M = jacobianM
 	self.jacobianT = self.jacobian:transposed()
+	self.MIxJT = Matrix:newCheap({
+		{self.maInv * self.jacobianT.M[1][1]},
+		{self.maInv * self.jacobianT.M[2][1]},
+		{self.maInv * self.jacobianT.M[3][1]},
+		{self.IaInv.M[1][1] * self.jacobianT.M[4][1] + self.IaInv.M[1][2] * self.jacobianT.M[5][1] + self.IaInv.M[1][3] * self.jacobianT.M[6][1]},
+		{self.IaInv.M[2][1] * self.jacobianT.M[4][1] + self.IaInv.M[2][2] * self.jacobianT.M[5][1] + self.IaInv.M[2][3] * self.jacobianT.M[6][1]},
+		{self.IaInv.M[3][1] * self.jacobianT.M[4][1] + self.IaInv.M[3][2] * self.jacobianT.M[5][1] + self.IaInv.M[3][3] * self.jacobianT.M[6][1]},
+		{self.mbInv * self.jacobianT.M[7][1]},
+		{self.mbInv * self.jacobianT.M[8][1]},
+		{self.mbInv * self.jacobianT.M[9][1]},
+		{self.IbInv.M[1][1] * self.jacobianT.M[10][1] + self.IbInv.M[1][2] * self.jacobianT.M[11][1] + self.IbInv.M[1][3] * self.jacobianT.M[12][1]},
+		{self.IbInv.M[2][1] * self.jacobianT.M[10][1] + self.IbInv.M[2][2] * self.jacobianT.M[11][1] + self.IbInv.M[2][3] * self.jacobianT.M[12][1]},
+		{self.IbInv.M[3][1] * self.jacobianT.M[10][1] + self.IbInv.M[3][2] * self.jacobianT.M[11][1] + self.IbInv.M[3][3] * self.jacobianT.M[12][1]},
+	})
+	self.JxMIxJT_I = (self.jacobian * self.MIxJT):inverse()
 end
 
 function fysiks.Constraint:calculateLagMul()
@@ -60,41 +77,11 @@ function fysiks.Constraint:calculateLagMul()
 		{self.bodyB.tmpConstraintVel.M[6][1]}
 	})
 	local num = (self.jacobian * vel) * -1 - self.bias
-	local JxMI = Matrix:newCheap({{
-		self.jacobian.M[1][1] * self.maInv,
-		self.jacobian.M[1][2] * self.maInv,
-		self.jacobian.M[1][3] * self.maInv,
-		self.jacobian.M[1][4] * self.IaInv.M[1][1] + self.jacobian.M[1][5] * self.IaInv.M[2][1] + self.jacobian.M[1][6] * self.IaInv.M[3][1],
-		self.jacobian.M[1][4] * self.IaInv.M[1][2] + self.jacobian.M[1][5] * self.IaInv.M[2][2] + self.jacobian.M[1][6] * self.IaInv.M[3][2],
-		self.jacobian.M[1][4] * self.IaInv.M[1][3] + self.jacobian.M[1][5] * self.IaInv.M[2][3] + self.jacobian.M[1][6] * self.IaInv.M[3][3],
-		self.jacobian.M[1][7] * self.mbInv,
-		self.jacobian.M[1][8] * self.mbInv,
-		self.jacobian.M[1][9] * self.mbInv,
-		self.jacobian.M[1][10] * self.IbInv.M[1][1] + self.jacobian.M[1][11] * self.IbInv.M[2][1] + self.jacobian.M[1][12] * self.IbInv.M[3][1],
-		self.jacobian.M[1][10] * self.IbInv.M[1][2] + self.jacobian.M[1][11] * self.IbInv.M[2][2] + self.jacobian.M[1][12] * self.IbInv.M[3][2],
-		self.jacobian.M[1][10] * self.IbInv.M[1][3] + self.jacobian.M[1][11] * self.IbInv.M[2][3] + self.jacobian.M[1][12] * self.IbInv.M[3][3],
-	}})
-	local den = JxMI * self.jacobianT
-	local deninv = (den):inverse()
-	self.tmpLagMul = deninv * num
+	self.tmpLagMul = self.JxMIxJT_I * num
 end
 
 function fysiks.Constraint:applyTmpLagMul()
-	local MIxJT = Matrix:newCheap({
-		{self.maInv * self.jacobianT.M[1][1]},
-		{self.maInv * self.jacobianT.M[2][1]},
-		{self.maInv * self.jacobianT.M[3][1]},
-		{self.IaInv.M[1][1] * self.jacobianT.M[4][1] + self.IaInv.M[1][2] * self.jacobianT.M[5][1] + self.IaInv.M[1][3] * self.jacobianT.M[6][1]},
-		{self.IaInv.M[2][1] * self.jacobianT.M[4][1] + self.IaInv.M[2][2] * self.jacobianT.M[5][1] + self.IaInv.M[2][3] * self.jacobianT.M[6][1]},
-		{self.IaInv.M[3][1] * self.jacobianT.M[4][1] + self.IaInv.M[3][2] * self.jacobianT.M[5][1] + self.IaInv.M[3][3] * self.jacobianT.M[6][1]},
-		{self.mbInv * self.jacobianT.M[7][1]},
-		{self.mbInv * self.jacobianT.M[8][1]},
-		{self.mbInv * self.jacobianT.M[9][1]},
-		{self.IbInv.M[1][1] * self.jacobianT.M[10][1] + self.IbInv.M[1][2] * self.jacobianT.M[11][1] + self.IbInv.M[1][3] * self.jacobianT.M[12][1]},
-		{self.IbInv.M[2][1] * self.jacobianT.M[10][1] + self.IbInv.M[2][2] * self.jacobianT.M[11][1] + self.IbInv.M[2][3] * self.jacobianT.M[12][1]},
-		{self.IbInv.M[3][1] * self.jacobianT.M[10][1] + self.IbInv.M[3][2] * self.jacobianT.M[11][1] + self.IbInv.M[3][3] * self.jacobianT.M[12][1]},
-	})
-	local deltaVel = MIxJT * self.tmpLagMul
+	local deltaVel = self.MIxJT * self.tmpLagMul
 
 	local aTmpVel = self.bodyA.tmpConstraintVel
 	local bTmpVel = self.bodyB.tmpConstraintVel

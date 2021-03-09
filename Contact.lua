@@ -31,14 +31,14 @@ function fysiks.Contact:new(a, b, aPoint, bPoint, normal, dtime)
 	c.normal = vector.normalize(normal)
 	c:calculateDepth()
 	c:calculateTangents()
-	c.normalConstraint = fysiks.ContactConstraint:new(Matrix:new(1, 1), Matrix:new(1, 1), a, b, c)
+	c.normalConstraint = fysiks.ContactConstraint:new(Matrix:new(1, 12), Matrix:new(1, 1), a, b, c)
 	--c.normalConstraint = fysiks.Constraint:new(Matrix:new(1, 1), Matrix:new(1, 1), a, b)
 	--fysiks.ContactConstraint:new(a, b, aPoint, bPoint, normal, dtime, self.baumgarte, self.penSlop, self.resSlop, c)
 	c:calculateContactConstraint(dtime)
-	c.tangentConstraint1 = fysiks.Constraint:new(Matrix:new(1, 1), Matrix:new(1, 1), a, b)
+	c.tangentConstraint1 = fysiks.Constraint:new(Matrix:new(1, 12), Matrix:new(1, 1), a, b)
 	c.tangentConstraint1.clampTop = true
 	c.tangentConstraint1.clampBottom = true
-	c.tangentConstraint2 = fysiks.Constraint:new(Matrix:new(1, 1), Matrix:new(1, 1), a, b)
+	c.tangentConstraint2 = fysiks.Constraint:new(Matrix:new(1, 12), Matrix:new(1, 1), a, b)
 	c.tangentConstraint2.clampTop = true
 	c.tangentConstraint2.clampBottom = true
 	c:calculateTangentConstraints()
