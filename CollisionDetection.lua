@@ -684,13 +684,21 @@ end)
 function fysiks.raycast(pos1, pos2)
 	local mtRay = minetest.raycast(pos1, pos2)
 	local closest_pointed_thing = nil
-	local mt_pointed_thing = mtRay:next()
-	if mt_pointed_thing then
+	local mt_pointed_thing = true
+	while mt_pointed_thing do
+		mt_pointed_thing = mtRay:next()
 		mt_pointed_thing.distance = vector.distance(pos1, mt_pointed_thing.intersection_point)
 		if mt_pointed_thing.type == "node" then
-			closest_pointed_thing = mt_pointed_thing
+			local node = minetest.get_node(mt_pointed_thing.under)
+			local nodeDef = minetest.registered_nodes[node.name]
+			local drawtype = nodeDef.drawtype
+			if drawtype ~= "plantlike" then
+				closest_pointed_thing = mt_pointed_thing
+				break
+			end
 		elseif mt_pointed_thing.type == "object" and not mt_pointed_thing.ref.fysiks then
 			closest_pointed_thing = mt_pointed_thing
+			break
 		end
 	end
 
