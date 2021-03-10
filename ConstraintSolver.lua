@@ -45,15 +45,23 @@ function fysiks.solveIslands(dtime)
 			end
 			for _, const in ipairs(island.constraints) do
 				const:apply()
-				--local lagMultSum = const.lagMultSum
-				--[[if const.clampTop then
-					for __, v in ipairs(lagMultSum) do
-						if math.abs(constv[1] - 0.001) > const.clampTopVal then
-							--constraint broke
-							--uncomment this when this event causes any kind of functionality
+				if const.on_break then
+				local lagMultSum = const.lagMultSum
+					if const.clampTop then
+						for i = 1, lagMultSum:height(), 1 do
+							if lagMultSum:get(i, 1) > const.clampTopVal - 0.001 then
+								const.on_break()
+							end
 						end
 					end
-				end]]
+					if const.clampBottom then
+						for i = 1, lagMultSum:height(), 1 do
+							if lagMultSum:get(i, 1) < const.clampBottomVal + 0.001 then
+								const.on_break()
+							end
+						end
+					end
+				end
 			end
 		else
 			for __, body in ipairs(island.bodies) do
