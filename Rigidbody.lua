@@ -1,7 +1,7 @@
 --make sure unpack works with all lua versions
 local unpack = unpack or table.unpack
 
-fysiks.use_velocities = minetest.settings:get("fysiks_use_velocities")
+fysiks.use_velocities = minetest.settings:get("fysiks_use_velocities") or "none"
 
 fysiks.nextID = 0
 
@@ -148,7 +148,11 @@ end
 function fysiks.Rigidbody:finishStep(dtime)
 
 	if not self.static and not self.asleep then
-		self.position = vector.add(self.position, vector.multiply(self.velocity, dtime))
+		if fysiks.use_velocities == "none" then
+			self.position = vector.add(self.position, vector.multiply(self.velocity, dtime))
+		else
+			self.position = self.object:get_pos()
+		end
 		if vector.distance(self.object:get_pos(), self.position) > 0.05 then
 			self.object:set_pos(self.position)
 		end
