@@ -4,7 +4,8 @@ fysiks.BoundingVolume = {
 	rotation = nil,
 	position = nil,
 	type = "abstract",
-	removed = false
+	removed = false,
+	aabb = nil
 }
 fysiks.BoundingVolume.__index = fysiks.BoundingVolume
 
@@ -28,6 +29,10 @@ function fysiks.BoundingVolume:new(obj)
 end
 
 function fysiks.BoundingVolume:getAABB()
+	return self.aabb
+end
+
+function fysiks.BoundingVolume:calculateAABB()
 	local xMax = self:getFurthestPointInDirection({x = 1, y = 0, z = 0}).x
 	local xMin = self:getFurthestPointInDirection({x = -1, y = 0, z = 0}).x
 	local yMax = self:getFurthestPointInDirection({x = 0, y = 1, z = 0}).y
@@ -35,7 +40,7 @@ function fysiks.BoundingVolume:getAABB()
 	local zMax = self:getFurthestPointInDirection({x = 0, y = 0, z = 1}).z
 	local zMin = self:getFurthestPointInDirection({x = 0, y = 0, z = -1}).z
 
-	return fysiks.AABB:new({x = xMax, y = yMax, z = zMax}, {x = xMin, y = yMin, z = zMin}, self)
+	self.aabb = fysiks.AABB:new({x = xMax, y = yMax, z = zMax}, {x = xMin, y = yMin, z = zMin}, self)
 end
 
 function fysiks.BoundingVolume:getFurthestPointInDirection(dir)
@@ -48,4 +53,17 @@ end
 
 function fysiks.BoundingVolume:setPosition(pos)
 	self.position = pos
+	self:calculateAABB()
+end
+
+function fysiks.BoundingVolume:intersectRay(pos, dir, dir_inv, dist)
+	local t = self.aabb:intersectRay(pos, dir_inv, dist)
+	if t and t < dist then
+		return self:intersectRayImpl(pos, dir, dir_inv, dist)
+	end
+	return nil
+end
+
+function fysiks.BoundingVolume:intersectRayImpl(pos, dir, dir_inv, dist)
+	return nil
 end

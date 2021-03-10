@@ -22,7 +22,7 @@ fysiks.register_rigidbody("fysiks:test2", {
 		--self.rotation = Matrix:rotation({x = math.pi / 4, y = math.rad(35.3), z = 0})
 		self.bounciness = 0
 		self.friction = 1
-		self.velocity = {x = 3, y = 0, z = 0}
+		self.velocity = {x = 0, y = 0, z = 0}
 	end,
 
 	custom_step = function(self, dtime)

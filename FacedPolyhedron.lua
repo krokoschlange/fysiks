@@ -146,6 +146,54 @@ function fysiks.FacedPolyhedron:updateVertexPositions()
 	self:updateCenter()
 end
 
+function fysiks.FacedPolyhedron:intersectRayImpl(pos, dir, dir_inv, dist)
+	local n = 0
+	local d = 0
+	local normal = vector.new()
+	local edge1 = vector.new()
+	local edge2 = vector.new()
+	local tenter = 0
+	local tleave = dist
+	local intersectNormal = normal
+	for _, face in ipairs(self.faces) do
+		edge1 = vector.subtract(self.vertices[face[1]], self.vertices[face[2]])
+		edge2 = vector.subtract(self.vertices[face[1]], self.vertices[face[3]])
+		normal = vector.normalize(vector.cross(edge1, edge2))
+		if vector.dot(normal, vector.subtract(self.center, self.vertices[face[1]])) < 0 then
+			normal = vector.multiply(normal, -1)
+		end
+		n = - vector.dot(normal, vector.subtract(pos, self.vertices[face[1]]))
+		d = vector.dot(normal, dir)
+		if math.abs(d) < 0.00000001 then
+			if n < 0 then
+				return nil
+			end
+		else
+			local t = n / d
+			if d > 0 then
+				if t > tenter then
+					tenter = t
+					intersectNormal = normal
+				end
+			else
+				tleave = math.min(tleave, t)
+			end
+			if tenter > tleave then
+				return nil
+			end
+		end
+	end
+	return {
+		type = "object",
+		ref = self.object,
+		intersection_point = vector.add(vector.multiply(dir, tenter), pos),
+		box_id = nil,
+		intersection_normal = intersectNormal,
+		distance = tenter,
+		fysiks_id = self.id
+	}
+end
+
 -- i used this for testing, it might be handy in the future
 function fysiks.FacedPolyhedron:print(n)
 	local str = "["

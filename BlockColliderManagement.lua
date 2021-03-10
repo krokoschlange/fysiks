@@ -45,6 +45,16 @@ function fysiks.updateBlockCollider(pos, create)
 	end
 end
 
+function fysiks.getBlockCollider(pos)
+	local blockpos = fysiks.getBlockPos(pos)
+	if not fysiks.blockcolliders[blockpos.x] or
+			not fysiks.blockcolliders[blockpos.x][blockpos.y] or
+			not fysiks.blockcolliders[blockpos.x][blockpos.y][blockpos.z] then
+		fysiks.updateBlockCollider(blockpos, true)
+	end
+	return fysiks.blockcolliders[blockpos.x][blockpos.y][blockpos.z]
+end
+
 function fysiks.getBlockColliders(min, max)
 	local blockmin = fysiks.getBlockPos(min)
 	local blockmax = fysiks.getBlockPos(max)

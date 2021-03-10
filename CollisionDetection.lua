@@ -680,3 +680,128 @@ end)
 minetest.register_on_dignode(function(pos, oldnode, digger)
 	fysiks.updateBlockCollider(fysiks.getBlockPos(pos), false)
 end)
+
+function fysiks.raycast(pos1, pos2)
+	local mtRay = minetest.raycast(pos1, pos2)
+	local closest_pointed_thing = nil
+	local mt_pointed_thing = mtRay:next()
+	if mt_pointed_thing then
+		mt_pointed_thing.distance = vector.distance(pos1, mt_pointed_thing.intersection_point)
+		if mt_pointed_thing.type == "node" then
+			closest_pointed_thing = mt_pointed_thing
+		elseif mt_pointed_thing.type == "object" and not mt_pointed_thing.ref.fysiks then
+			closest_pointed_thing = mt_pointed_thing
+		end
+	end
+
+	local allObjs = minetest.object_refs
+	local dir = vector.direction(pos1, pos2)
+	local dir_inv = {x = 1 / dir.x, y = 1 / dir.y, z = 1 / dir.z}
+	local dist = vector.distance(pos1, pos2)
+	for _, obj in pairs(allObjs) do
+		if obj:get_luaentity() and obj:get_luaentity().fysiks then
+			local body = obj:get_luaentity()
+			for __, vol in ipairs(body.collisionBoxes) do
+				local pointed_thing = vol:intersectRay(pos1, dir, dir_inv, dist)
+				if pointed_thing and (not closest_pointed_thing or
+						pointed_thing.distance < closest_pointed_thing.distance) then
+					closest_pointed_thing = pointed_thing
+				end
+			end
+		end
+	end
+	return closest_pointed_thing
+end
+
+function fysiks.raycast_smooth(pos1, pos2)
+	local pointed_thing = fysiks.raycast(pos1, pos2)
+	if not pointed_thing or pointed_thing.type ~= "node" then
+		return pointed_thing
+	end
+
+	local pos = pointed_thing.under
+	if not fysiks.getBlockCollider(pos):getNode(pos) then
+		return pointed_thing
+	end
+	local relPoint = vector.subtract(pointed_thing.intersection_point, pos)
+	local n = pointed_thing.intersection_normal
+	local t1 = 0
+	local t1Dir = nil
+	local t2 = 0
+	local t2Dir = nil
+	if math.abs(n.x) > 0.5 then
+		t1 = math.abs(relPoint.y) * 2
+		t1Dir = {x = 0, y = math.sign(relPoint.y), z = 0}
+		t2 = math.abs(relPoint.z) * 2
+		t2Dir = {x = 0, y = 0, z = math.sign(relPoint.z)}
+	elseif math.abs(n.y) > 0.5 then
+		t1 = math.abs(relPoint.x) * 2
+		t1Dir = {x = math.sign(relPoint.x), y = 0, z = 0}
+		t2 = math.abs(relPoint.z) * 2
+		t2Dir = {x = 0, y = 0, z = math.sign(relPoint.z)}
+	else
+		t1 = math.abs(relPoint.x) * 2
+		t1Dir = {x = math.sign(relPoint.x), y = 0, z = 0}
+		t2 = math.abs(relPoint.y) * 2
+		t2Dir = {x = 0, y = math.sign(relPoint.y), z = 0}
+	end
+
+	local t1H = 1
+	local t2H = 1
+	local t3H = 1
+
+	local searchPos = vector.add(pos, vector.add(n, t1Dir))
+	if not fysiks.getBlockCollider(searchPos):getNode(searchPos) then
+		t1H = 0
+	end
+	searchPos = vector.add(pos, t1Dir)
+	if t1H == 0 and not fysiks.getBlockCollider(searchPos):getNode(searchPos) then
+		t1H = -1
+	end
+	searchPos = vector.add(pos, vector.add(n, t2Dir))
+	if not fysiks.getBlockCollider(searchPos):getNode(searchPos) then
+		t2H = 0
+	end
+	searchPos = vector.add(pos, t2Dir)
+	if t2H == 0 and not fysiks.getBlockCollider(searchPos):getNode(searchPos) then
+		t2H = -1
+	end
+	searchPos = vector.add(pos, vector.add(n, vector.add(t1Dir, t2Dir)))
+	if not fysiks.getBlockCollider(searchPos):getNode(searchPos) then
+		t3H = 0
+	end
+	searchPos = vector.add(pos, vector.add(t1Dir, t2Dir))
+	if t3H == 0 and (t1H < 0 or t2H < 0 or not fysiks.getBlockCollider(searchPos):getNode(searchPos)) then
+		t3H = -1
+	end
+
+	local t1m = 0
+	local t2m = 0
+
+	if t1 > t2 then
+		t1m = t1H
+		t2m = t3H
+	else
+		t1m = t3H
+		t2m = t2H
+	end
+
+	t1m = t1m / 4
+	t2m = t2m / 4
+
+	local dir = vector.direction(pos2, pos1)
+	local v1 = vector.dot(dir, t1Dir)
+	local v2 = vector.dot(dir, t2Dir)
+	local v3 = vector.dot(dir, n)
+	local v = {x = v1, y = v2, z = v3}
+	v = vector.multiply(v, 1 / vector.dot(v, {x = 0, y = 0, z = 1}))
+
+	local height = (-t1m * t1 - t2m * t2) / (t1m * v.x + t2m * v.y - 1)
+
+	local t1i = (t1 / 2 + v.x * height)
+	local t2i = (t2 / 2 + v.y * height)
+	local p = vector.add(vector.multiply(t1Dir, t1i), vector.add(vector.multiply(t2Dir, t2i), vector.multiply(n, 0.5 + height)))
+
+	pointed_thing.intersection_point = vector.add(pos, p)
+	return pointed_thing
+end

@@ -20,7 +20,7 @@ function fysiks.BlockCollider:getLocalPos(pos)
 	return {
 		x = pos.x - self.pos.x * fysiks.BLOCKSIZE,
 		y = pos.y - self.pos.y * fysiks.BLOCKSIZE,
-		z = pos.z - self.pos.z * cfysiks.BLOCKSIZE
+		z = pos.z - self.pos.z * fysiks.BLOCKSIZE
 	}
 end
 
@@ -52,6 +52,11 @@ function fysiks.BlockCollider:calculateNodePositions()
 			end
 		end
 	end
+end
+
+function fysiks.BlockCollider:getNode(pos)
+	local localpos = self:getLocalPos(pos)
+	return self.nodes[localpos.x][localpos.y][localpos.z]
 end
 
 function fysiks.BlockCollider:setNode(pos)

@@ -47,9 +47,11 @@ end
 function fysiks.Polyhedron:setRotation(rot)
 	self.rotation = rot
 	self:updateVertexPositions()
+	self:calculateAABB()
 end
 
 function fysiks.Polyhedron:setPosition(pos)
 	self.position = pos
 	self:updateVertexPositions()
+	self:calculateAABB()
 end
