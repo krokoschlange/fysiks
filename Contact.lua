@@ -8,6 +8,7 @@ fysiks.Contact = {
 	normal = nil,
 	tangent1 = nil,
 	tangent2 = nil,
+	frictionCoeff = nil,
 	depth = 0,
 	normalConstraint = nil,
 	tangentConstraint1 = nil,
@@ -29,6 +30,10 @@ function fysiks.Contact:new(a, b, aPoint, bPoint, normal, dtime)
 	c.bPoint = bPoint
 	c.localBPoint = b:globalToLocal(bPoint)
 	c.normal = vector.normalize(normal)
+	local fricA = a.friction
+	local fricB = b.friction
+	local exponent = (fricA - fricB) / (fricA + fricB)
+	c.frictionCoeff = (fricA + fricB) / 2 * math.pow(2, -exponent * exponent)
 	c:calculateDepth()
 	c:calculateTangents()
 	c.normalConstraint = fysiks.ContactConstraint:new(Matrix:new(1, 12), Matrix:new(1, 1), a, b, c)
@@ -172,9 +177,8 @@ function fysiks.Contact:recalculate(dtime)
 end
 
 function fysiks.Contact:setTangentClamp(clamp)
-	local frictionCoeff = (self.bodyA.friction + self.bodyB.friction) / 2
-	self.tangentConstraint1.clampTopVal = math.abs(clamp) * frictionCoeff
-	self.tangentConstraint1.clampBottomVal = -math.abs(clamp) * frictionCoeff
-	self.tangentConstraint2.clampTopVal = math.abs(clamp) * frictionCoeff
-	self.tangentConstraint2.clampBottomVal = -math.abs(clamp) * frictionCoeff
+	self.tangentConstraint1.clampTopVal = math.abs(clamp) * self.frictionCoeff
+	self.tangentConstraint1.clampBottomVal = -math.abs(clamp) * self.frictionCoeff
+	self.tangentConstraint2.clampTopVal = math.abs(clamp) * self.frictionCoeff
+	self.tangentConstraint2.clampBottomVal = -math.abs(clamp) * self.frictionCoeff
 end
