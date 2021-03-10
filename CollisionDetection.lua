@@ -11,6 +11,14 @@ function fysiks.addCollisionPair(a, b, collision)
 	if not fysiks.collisionPairs[smallerID] then
 		fysiks.collisionPairs[smallerID] = {}
 	end
+	if not fysiks.collisionPairs[smallerID][biggerID] then
+		if a.on_collision then
+			a:on_collision(collision)
+		end
+		if b.on_collision then
+			b:on_collision(collision)
+		end
+	end
 	fysiks.collisionPairs[smallerID][biggerID] = collision
 end
 
@@ -35,6 +43,14 @@ function fysiks.removeCollisionPair(a, b)
 		biggerID = a.id
 	end
 	if fysiks.collisionPairs[smallerID] then
+		if not fysiks.collisionPairs[smallerID][biggerID] then
+			if a.on_end_collision then
+				a:on_end_collision(collision)
+			end
+			if b.on_end_collision then
+				b:on_end_collision(collision)
+			end
+		end
 		fysiks.collisionPairs[smallerID][biggerID] = nil
 	end
 end
