@@ -88,6 +88,14 @@ function fysiks.Rigidbody:globalToLocal(point)
 	return vector.fromMatrix(self.rotation:inverse() * vector.toMatrix(vector.subtract(point, self.position)))
 end
 
+function fysiks.Rigidbody:getPointVelocity(point)
+	return vector.add(self.velocity, vector.cross(self.angularVelocity, point))
+end
+
+function fysiks.Rigidbody:getLever(point)
+	return vector.fromMatrix(self.rotation * vector.toMatrix(point))
+end
+
 function fysiks.Rigidbody:applyForce(force, point)
 	self.resultantForce = vector.add(self.resultantForce, force)
 	self.resultantTorque = vector.add(self.resultantTorque, vector.cross(point, force))
@@ -150,11 +158,9 @@ function fysiks.Rigidbody:finishStep(dtime)
 	if not self.static and not self.asleep then
 		if fysiks.use_velocities == "none" then
 			self.position = vector.add(self.position, vector.multiply(self.velocity, dtime))
+			self.object:set_pos(self.position)
 		else
 			self.position = self.object:get_pos()
-		end
-		if vector.distance(self.object:get_pos(), self.position) > 0.05 then
-			self.object:set_pos(self.position)
 		end
 
 		self.rotation = Matrix:axisAngle(vector.multiply(self.angularVelocity, dtime)) * self.rotation
