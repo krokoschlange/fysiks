@@ -684,9 +684,8 @@ end)
 function fysiks.raycast(pos1, pos2)
 	local mtRay = minetest.raycast(pos1, pos2)
 	local closest_pointed_thing = nil
-	local mt_pointed_thing = true
+	local mt_pointed_thing = mtRay:next()
 	while mt_pointed_thing do
-		mt_pointed_thing = mtRay:next()
 		mt_pointed_thing.distance = vector.distance(pos1, mt_pointed_thing.intersection_point)
 		if mt_pointed_thing.type == "node" then
 			local node = minetest.get_node(mt_pointed_thing.under)
@@ -700,6 +699,7 @@ function fysiks.raycast(pos1, pos2)
 			closest_pointed_thing = mt_pointed_thing
 			break
 		end
+		mt_pointed_thing = mtRay:next()
 	end
 
 	local allObjs = minetest.object_refs
