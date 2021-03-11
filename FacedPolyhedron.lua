@@ -191,7 +191,7 @@ function fysiks.FacedPolyhedron:intersectRayImpl(pos, dir, dir_inv, dist)
 	end
 	return {
 		type = "object",
-		ref = self.object,
+		ref = self.object.object,
 		intersection_point = vector.add(vector.multiply(dir, tenter), pos),
 		box_id = nil,
 		intersection_normal = intersectNormal,

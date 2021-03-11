@@ -25,7 +25,7 @@ function fysiks.Sphere:intersectRayImpl(pos, dir, dir_inv, dist)
 	if dtcsqr < rsqr then
 		return {
 			type = "object",
-			ref = self.object,
+			ref = self.object.object,
 			intersection_point = pos,
 			box_id = nil,
 			intersection_normal = {x = 0, y = 0, z = 0},
@@ -40,7 +40,7 @@ function fysiks.Sphere:intersectRayImpl(pos, dir, dir_inv, dist)
 		local intersect = vector.add(vector.multiply(dir, distToSurf), pos)
 		return {
 			type = "object",
-			ref = self.object,
+			ref = self.object.object,
 			intersection_point = intersect,
 			box_id = nil,
 			intersection_normal = vector.subtract(intersect, self.position),

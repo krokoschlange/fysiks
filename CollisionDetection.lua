@@ -681,7 +681,7 @@ minetest.register_on_dignode(function(pos, oldnode, digger)
 	fysiks.updateBlockCollider(fysiks.getBlockPos(pos), false)
 end)
 
-function fysiks.raycast(pos1, pos2)
+function fysiks.raycast(pos1, pos2, exclude)
 	local mtRay = minetest.raycast(pos1, pos2)
 	local closest_pointed_thing = nil
 	local mt_pointed_thing = mtRay:next()
@@ -695,9 +695,19 @@ function fysiks.raycast(pos1, pos2)
 				closest_pointed_thing = mt_pointed_thing
 				break
 			end
-		elseif mt_pointed_thing.type == "object" and not mt_pointed_thing.ref.fysiks then
-			closest_pointed_thing = mt_pointed_thing
-			break
+		elseif mt_pointed_thing.type == "object" and not mt_pointed_thing.ref:get_luaentity().fysiks then
+			local ignore = false
+			if exclude then
+				for __, ex in ipairs(exclude) do
+					if ex == mt.pointed_thing.ref:get_luaentity() then
+						ignore = true
+					end
+				end
+			end
+			if not ignore then
+				closest_pointed_thing = mt_pointed_thing
+				break
+			end
 		end
 		mt_pointed_thing = mtRay:next()
 	end
@@ -709,11 +719,21 @@ function fysiks.raycast(pos1, pos2)
 	for _, obj in pairs(allObjs) do
 		if obj:get_luaentity() and obj:get_luaentity().fysiks then
 			local body = obj:get_luaentity()
-			for __, vol in ipairs(body.collisionBoxes) do
-				local pointed_thing = vol:intersectRay(pos1, dir, dir_inv, dist)
-				if pointed_thing and (not closest_pointed_thing or
-						pointed_thing.distance < closest_pointed_thing.distance) then
-					closest_pointed_thing = pointed_thing
+			local ignore = false
+			if exclude then
+				for __, ex in ipairs(exclude) do
+					if ex == body then
+						ignore = true
+					end
+				end
+			end
+			if not ignore then
+				for __, vol in ipairs(body.collisionBoxes) do
+					local pointed_thing = vol:intersectRay(pos1, dir, dir_inv, dist)
+					if pointed_thing and (not closest_pointed_thing or
+							pointed_thing.distance < closest_pointed_thing.distance) then
+						closest_pointed_thing = pointed_thing
+					end
 				end
 			end
 		end
@@ -721,8 +741,8 @@ function fysiks.raycast(pos1, pos2)
 	return closest_pointed_thing
 end
 
-function fysiks.raycast_smooth(pos1, pos2)
-	local pointed_thing = fysiks.raycast(pos1, pos2)
+function fysiks.raycast_smooth(pos1, pos2, exclude)
+	local pointed_thing = fysiks.raycast(pos1, pos2, exclude)
 	if not pointed_thing or pointed_thing.type ~= "node" then
 		return pointed_thing
 	end
