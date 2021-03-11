@@ -6,11 +6,12 @@ function fysiks.Polyhedron:new(obj, vertices)
 	setmetatable(p, self)
 	p.object = obj
 	local vertices = vertices or {}
-	p.vertices = vertices
+	p.vertices = {}
 	p.origVerts = {}
 
 	for k, v in ipairs(vertices) do
 		table.insert(p.origVerts, {x = v.x, y = v.y, z = v.z})
+		table.insert(p.vertices, {x = v.x, y = v.y, z = v.z})
 	end
 
 	return p

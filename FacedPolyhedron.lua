@@ -3,7 +3,13 @@ fysiks.FacedPolyhedron.__index = fysiks.FacedPolyhedron
 
 function fysiks.FacedPolyhedron:new(obj, verts, faces)
 	local p = setmetatable(fysiks.Polyhedron:new(obj, verts), self)
-	p.faces = faces
+	p.faces = {}
+	for k, face in ipairs(faces) do
+		table.insert(p.faces, {})
+		for __, vert in ipairs(face) do
+			table.insert(p.faces[k], vert)
+		end
+	end
 	p.neighbors = {}
 	--p:calculateNeighbors()
 	p:updateCenter()

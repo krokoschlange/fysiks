@@ -5,7 +5,10 @@ fysiks.FullPolyhedron.__index = fysiks.FullPolyhedron
 
 function fysiks.FullPolyhedron:new(obj, verts, edges, faces)
 	local p = setmetatable(fysiks.FacedPolyhedron:new(obj, verts, faces), self)
-	p.edges = edges
+	p.edges = {}
+	for _, edge in ipairs(edges) do
+		table.insert(p.edges, {edge[1], edge[2]})
+	end
 	return p
 end
 
