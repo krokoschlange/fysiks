@@ -695,11 +695,11 @@ function fysiks.raycast(pos1, pos2, exclude)
 				closest_pointed_thing = mt_pointed_thing
 				break
 			end
-		elseif mt_pointed_thing.type == "object" and not mt_pointed_thing.ref:get_luaentity().fysiks then
+		elseif mt_pointed_thing.type == "object" and (mt_pointed_thing.ref:is_player() or mt_pointed_thing.ref:get_luaentity().fysiks) then
 			local ignore = false
 			if exclude then
 				for __, ex in ipairs(exclude) do
-					if ex == mt.pointed_thing.ref:get_luaentity() then
+					if ex == mt_pointed_thing.ref:get_luaentity() then
 						ignore = true
 					end
 				end
