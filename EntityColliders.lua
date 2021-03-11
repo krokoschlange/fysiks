@@ -1,6 +1,11 @@
 fysiks.entitycolliders = {}
 
 function fysiks.updateEntityCollider(k, entity)
+	if entity and entity:get_attach() then
+		fysiks.entitycolliders[k] = nil
+		return
+	end
+
 	if not fysiks.entitycolliders[k] then
 		if entity:is_player() or (entity:get_luaentity() and entity:get_luaentity().physical and entity:get_luaentity().collide_with_objects) then
 			local box = entity:get_properties().collisionbox
@@ -42,7 +47,7 @@ end
 
 function fysiks.checkEntityColliders(entities)
 	for k, coll in pairs(fysiks.entitycolliders) do
-		if not entities[k] then
+		if not entities[k] or entities[k]:get_attach() then
 			fysiks.entitycolliders[k] = nil
 		end
 	end
