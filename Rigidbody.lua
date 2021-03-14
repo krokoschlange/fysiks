@@ -2,6 +2,8 @@
 local unpack = unpack or table.unpack
 
 fysiks.use_velocities = minetest.settings:get("fysiks_use_velocities") or "none"
+fysiks.sleepVelocity = minetest.settings:get("fysiks_sleep_velocity") or 0.001
+fysiks.sleepAngularVelocity = minetest.settings:get("fysiks_sleep_angular_velocity") or 0.001
 
 fysiks.nextID = 0
 
@@ -179,7 +181,7 @@ function fysiks.Rigidbody:finishStep(dtime)
 		v:setPosition(self.position)
 	end
 
-	if vector.length(self.velocity) < 0.1 and vector.length(self.angularVelocity) < 0.1 then
+	if vector.length(self.velocity) < fysiks.sleepVelocity and vector.length(self.angularVelocity) < fysiks.sleepAngularVelocity then
 		self.sleepTimer = self.sleepTimer + 1
 		self.sleepForce = self.resultantForce
 		self.sleepTorque = self.resultantTorque
