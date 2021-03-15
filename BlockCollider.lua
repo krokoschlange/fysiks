@@ -68,6 +68,9 @@ end
 
 function fysiks.BlockCollider:getNodeColliderInfo(node)
 	local nodeDef = minetest.registered_nodes[node.name]
+	if not nodeDef.walkable then
+		return nil
+	end
 	local drawtype = nodeDef.drawtype
 	local collisionbox = nodeDef.collision_box
 	local boxtype = nil
