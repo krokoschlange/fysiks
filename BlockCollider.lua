@@ -13,6 +13,8 @@ function fysiks.BlockCollider:new(pos)
 	c.body.static = true
 	c.body.friction = 1
 	c.body.sleepTimer = fysiks.SLEEP_TIME + 1
+	c.body.getFriction = function(body, point, normal) return c:getFriction(point, normal) end
+	c.body.getBounciness = function(body, point, normal) return c:getBounciness(point, normal) end
 	return c
 end
 
@@ -30,6 +32,29 @@ function fysiks.BlockCollider:getNodePos(pos)
 		y = self.pos.y * fysiks.BLOCKSIZE + pos.y,
 		z = self.pos.z * fysiks.BLOCKSIZE + pos.z,
 	}
+end
+
+
+function fysiks.BlockCollider:getFriction(point, normal)
+	local x = math.floor(point.x + 0.5 - normal.x * 0.5)
+	local y = math.floor(point.y + 0.5 - normal.y * 0.5)
+	local z = math.floor(point.z + 0.5 - normal.z * 0.5)
+	if self.nodes[x] and self.nodes[x][y] and
+			self.nodes[x][y][z] and self.nodes[x][y][z].friction then
+		return self.nodes[x][y][z].friction
+	end
+	return 1
+end
+
+function fysiks.BlockCollider:getBounciness(point, normal)
+	local x = math.floor(point.x + 0.5 - normal.x * 0.5)
+	local y = math.floor(point.y + 0.5 - normal.y * 0.5)
+	local z = math.floor(point.z + 0.5 - normal.z * 0.5)
+	if self.nodes[x] and self.nodes[x][y] and
+			self.nodes[x][y][z] and self.nodes[x][y][z].bounciness then
+		return self.nodes[x][y][z].bounciness
+	end
+	return 1
 end
 
 function fysiks.BlockCollider:extractNodeboxCollider(nodebox)
@@ -83,6 +108,10 @@ function fysiks.BlockCollider:getNodeColliderInfo(node)
 	elseif drawtype == "nodebox" then
 		local nodebox = nodeDef.node_box
 		boxtype = {type = "nodebox", boxes = self:extractNodeboxCollider(nodebox)}
+	end
+	if boxtype and fysiks.nodeDefinitions[node.name] then
+		boxtype.friction = fysiks.nodeDefinitions[node.name].friction or 1
+		boxtype.bounciness = fysiks.nodeDefinitions[node.name].friction or 0
 	end
 	return boxtype
 end

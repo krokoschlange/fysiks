@@ -30,8 +30,8 @@ function fysiks.Contact:new(a, b, aPoint, bPoint, normal, dtime)
 	c.bPoint = bPoint
 	c.localBPoint = b:globalToLocal(bPoint)
 	c.normal = vector.normalize(normal)
-	local fricA = a.friction
-	local fricB = b.friction
+	local fricA = a:getFriction(c.localAPoint, normal)
+	local fricB = b:getFriction(c.localBPoint, vector.multiply(normal, -1))
 	local exponent = (fricA - fricB) / (fricA + fricB)
 	c.frictionCoeff = (fricA + fricB) / 2 * math.pow(2, -exponent * exponent)
 	c:calculateDepth()

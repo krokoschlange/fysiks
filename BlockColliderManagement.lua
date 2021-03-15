@@ -1,5 +1,6 @@
 fysiks.blockcolliders = {}
 fysiks.updatedBlockColliders = {}
+fysiks.nodeDefinitions = {}
 
 fysiks.BLOCKSIZE = 4
 
@@ -72,4 +73,8 @@ function fysiks.getBlockColliders(min, max)
 		end
 	end
 	return colls
+end
+
+function fysiks.register_node_properties(name, def)
+	fysiks.nodeDefinitions[name] = def
 end

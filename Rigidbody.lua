@@ -238,6 +238,14 @@ function fysiks.Rigidbody:getInvInertiaTensor()
 	end
 end
 
+function fysiks.Rigidbody:getFriction(point, normal)
+	return self.friction
+end
+
+function fysiks.Rigidbody:getBounciness(point, normal)
+	return self.bounciness
+end
+
 function fysiks.Rigidbody:on_activate(staticdata, dtime_s)
 	self.mass = self.rigidbody_def.mass or self.mass
 	self.inertiaTensor = Matrix:new(self.rigidbody_def.inertiaTensor or self.inertiaTensor)
