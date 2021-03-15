@@ -650,9 +650,11 @@ function fysiks.detectCollisions(dtime)
 
 	fysiks.solveIslands(dtime)
 
-	for _, obj in pairs(allObjs) do
+	for k, obj in pairs(allObjs) do
 		if obj:get_luaentity() and obj:get_luaentity().fysiks then
 			obj:get_luaentity():finishStep(dtime)
+		else
+			fysiks.applyConstraintImpulsesToEntity(k ,obj)
 		end
 	end
 
