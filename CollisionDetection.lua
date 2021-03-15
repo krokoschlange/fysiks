@@ -119,9 +119,6 @@ function fysiks.broadPhase(volumes)
 		table.insert(z, {aabb = aabb, obj = rigidbody, val = zvals.max, isMin = false})
 	end
 
-	--naturalMergeSort(x, function(a, b) return a.val < b.val end)
-	--naturalMergeSort(y, function(a, b) return a.val < b.val end)
-	--naturalMergeSort(z, function(a, b) return a.val < b.val end)
 	table.sort(x, function(a, b) return a.val < b.val end)
 	table.sort(y, function(a, b) return a.val < b.val end)
 	table.sort(z, function(a, b) return a.val < b.val end)
@@ -234,12 +231,6 @@ function fysiks.EPA(a, b, simplex, pointIdx)
 		local nnormal = vector.normalize(normal)
 		local newPoint, idx = fysiks.minkowskiSupport(a, b, nnormal)
 
-		--[[for _, point in ipairs(closestFace) do
-			local vert = polyhedron.vertices[point]
-			if vector.length(vector.subtract(newPoint, vert)) < 0.05 then
-				alreadyFound = true
-			end
-		end]]
 		for _, face in ipairs(polyhedron.faces) do
 			local tang1 = vector.subtract(polyhedron.vertices[face[2]], polyhedron.vertices[face[1]])
 			local tang2 = vector.subtract(polyhedron.vertices[face[3]], polyhedron.vertices[face[1]])
@@ -521,8 +512,6 @@ function fysiks.narrowPhase(aabbPairs, dtime)
 					table.insert(contacts, fysiks.Contact:new(objA, objB, contacts1[i], contacts2[i], nnormal, dtime))
 				end
 			end
-			--table.sort(contacts, function(a, b) return a.depth < b.depth end)
-			--TODO: dont make pairs of bodies, use colliders instead
 			if collisionPair == nil or oneshot then
 				collisionPair = {
 					a = objA,
@@ -741,6 +730,7 @@ function fysiks.raycast(pos1, pos2, exclude)
 	return closest_pointed_thing
 end
 
+--TODO: somehow this generates nan sometimes, needs to be fixed
 function fysiks.raycast_smooth(pos1, pos2, exclude)
 	local pointed_thing = fysiks.raycast(pos1, pos2, exclude)
 	if not pointed_thing or pointed_thing.type ~= "node" then
@@ -779,27 +769,33 @@ function fysiks.raycast_smooth(pos1, pos2, exclude)
 	local t3H = 1
 
 	local searchPos = vector.add(pos, vector.add(n, t1Dir))
-	if not fysiks.getBlockCollider(searchPos):getNode(searchPos) then
+	local node = fysiks.getBlockCollider(searchPos):getNode(searchPos)
+	if not (node and node.type == "normal") then
 		t1H = 0
 	end
 	searchPos = vector.add(pos, t1Dir)
-	if t1H == 0 and not fysiks.getBlockCollider(searchPos):getNode(searchPos) then
+	node = fysiks.getBlockCollider(searchPos):getNode(searchPos)
+	if t1H == 0 and not (node and node.type == "normal") then
 		t1H = -1
 	end
 	searchPos = vector.add(pos, vector.add(n, t2Dir))
-	if not fysiks.getBlockCollider(searchPos):getNode(searchPos) then
+	node = fysiks.getBlockCollider(searchPos):getNode(searchPos)
+	if not (node and node.type == "normal") then
 		t2H = 0
 	end
 	searchPos = vector.add(pos, t2Dir)
-	if t2H == 0 and not fysiks.getBlockCollider(searchPos):getNode(searchPos) then
+	node = fysiks.getBlockCollider(searchPos):getNode(searchPos)
+	if t2H == 0 and not (node and node.type == "normal") then
 		t2H = -1
 	end
 	searchPos = vector.add(pos, vector.add(n, vector.add(t1Dir, t2Dir)))
-	if not fysiks.getBlockCollider(searchPos):getNode(searchPos) then
+	node = fysiks.getBlockCollider(searchPos):getNode(searchPos)
+	if not (node and node.type == "normal") then
 		t3H = 0
 	end
 	searchPos = vector.add(pos, vector.add(t1Dir, t2Dir))
-	if t3H == 0 and (t1H < 0 or t2H < 0 or not fysiks.getBlockCollider(searchPos):getNode(searchPos)) then
+	node = fysiks.getBlockCollider(searchPos):getNode(searchPos)
+	if t3H == 0 and (t1H < 0 or t2H < 0 or not (node and node.type == "normal")) then
 		t3H = -1
 	end
 

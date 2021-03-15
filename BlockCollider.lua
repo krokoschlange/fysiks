@@ -32,12 +32,56 @@ function fysiks.BlockCollider:getNodePos(pos)
 	}
 end
 
-function fysiks.BlockCollider:nodeHasCollider(node)
+function fysiks.BlockCollider:extractNodeboxCollider(nodebox)
+	local boxes = {}
+	if nodebox.type == "regular" then
+		boxes = {{{x = -0.5, y = -0.5, z = -0.5}, {x = 0.5, y = 0.5, z = 0.5}}}
+	elseif nodebox.type == "fixed" or nodebox.type == "leveled"
+			or nodebox.type == "connected" then
+		if nodebox.fixed and #nodebox.fixed > 0 then
+			if type(nodebox.fixed[1]) == "number" then
+				local box = nodebox.fixed
+				table.insert(boxes, {{x = box[1], y = box[2], z = box[3]}, {x = box[4], y = box[5], z = box[6]}})
+			else
+				for k, box in ipairs(nodebox.fixed) do
+					table.insert(boxes, {{x = box[1], y = box[2], z = box[3]}, {x = box[4], y = box[5], z = box[6]}})
+				end
+			end
+		end
+		--TODO: figure out the leveled nodebox
+		--TODO: figure out the connections of the node to be more accurate
+		if nodebox.type == "connected" and nodebox.disconnected and #nodebox.disconnected > 0 then
+			if type(nodebox.disconnected[1]) == "number" then
+				local box = nodebox.disconnected
+				table.insert(boxes, {{x = box[1], y = box[2], z = box[3]}, {x = box[4], y = box[5], z = box[6]}})
+			else
+				for k, box in ipairs(nodebox.disconnected) do
+					table.insert(boxes, {{x = box[1], y = box[2], z = box[3]}, {x = box[4], y = box[5], z = box[6]}})
+				end
+			end
+		end
+	elseif nodebox.type == "wallmounted" then
+		--TODO: figure out wallmounted nodebox
+	end
+	return boxes
+end
+
+function fysiks.BlockCollider:getNodeColliderInfo(node)
 	local nodeDef = minetest.registered_nodes[node.name]
 	local drawtype = nodeDef.drawtype
-	return drawtype == "normal" or drawtype == "mesh"
+	local collisionbox = nodeDef.collision_box
+	local boxtype = nil
+	if collisionbox then
+		boxtype = {type = "nodebox", boxes = self:extractNodeboxCollider(collisionbox)}
+	elseif drawtype == "normal" or drawtype == "mesh"
 			or drawtype:sub(1, #"allfaces") == "allfaces"
-			or drawtype:sub(1, #"glasslike") == "glasslike"
+			or drawtype:sub(1, #"glasslike") == "glasslike" then
+		boxtype = {type = "normal"}
+	elseif drawtype == "nodebox" then
+		local nodebox = nodeDef.node_box
+		boxtype = {type = "nodebox", boxes = self:extractNodeboxCollider(nodebox)}
+	end
+	return boxtype
 end
 
 function fysiks.BlockCollider:calculateNodePositions()
@@ -48,7 +92,7 @@ function fysiks.BlockCollider:calculateNodePositions()
 			self.nodes[x][y] = {}
 			for z = 0, fysiks.BLOCKSIZE - 1, 1 do
 				local pos = self:getNodePos({x = x, y = y, z = z})
-				self.nodes[x][y][z] = self:nodeHasCollider(minetest.get_node(pos))
+				self.nodes[x][y][z] = self:getNodeColliderInfo(minetest.get_node(pos))
 			end
 		end
 	end
@@ -57,14 +101,6 @@ end
 function fysiks.BlockCollider:getNode(pos)
 	local localpos = self:getLocalPos(pos)
 	return self.nodes[localpos.x][localpos.y][localpos.z]
-end
-
-function fysiks.BlockCollider:setNode(pos)
-	self.nodes[pos.x][pos.y][pos.z] = true
-end
-
-function fysiks.BlockCollider:removeNode(pos)
-	self.nodes[pos.x][pos.y][pos.z] = false
 end
 
 function fysiks.BlockCollider:recalculate()
@@ -81,7 +117,8 @@ function fysiks.BlockCollider:recalculate()
 			local box = nil
 			boxes[y][x] = {}
 			for z = 0, fysiks.BLOCKSIZE - 1, 1 do
-				if self.nodes[x][y][z] then
+				local boxtype = self.nodes[x][y][z]
+				if boxtype and boxtype.type == "normal" then
 					if box then
 						box.length = box.length + 1
 					else
@@ -91,6 +128,15 @@ function fysiks.BlockCollider:recalculate()
 					if box then
 						table.insert(boxes[y][x], box)
 						box = nil
+					end
+					if boxtype and boxtype.type == "nodebox" then
+						for k, box in ipairs(boxtype.boxes) do
+							local min = vector.add({x = x, y = y, z = z}, box[1])
+							local max = vector.add({x = x, y = y, z = z}, box[2])
+							local cuboid = fysiks.Cuboid:new(self.body, min, max)
+							cuboid:setPosition(self.body.position)
+							table.insert(self.colliders, cuboid)
+						end
 					end
 				end
 			end
