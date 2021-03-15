@@ -22,7 +22,7 @@ function fysiks.updateEntityCollider(k, entity)
 				end
 
 				body.mass = def.mass or 1/0
-				body.invInertiaTensor = def.invInertiaTensor or Matrix:new(3, 3)
+				body.invInertiaTensor = Matrix:new(3, 3)
 				body.friction = def.friction or 1
 				body.bounciness = def.bounciness or 0
 
