@@ -66,7 +66,7 @@ function fysiks.Constraint:setJacobianM(jacobianM)
 			{0, 0, self.maInv, 0, 0, 0, 0, 0, 0, 0, 0, 0},
 			{0, 0, 0, self.IaInv.M[1][1], self.IaInv.M[1][2], self.IaInv.M[1][3]},
 			{0, 0, 0, self.IaInv.M[2][1], self.IaInv.M[2][2], self.IaInv.M[2][3]},
-			{0, 0, 0, self.IaInv.M[3][1], self.IaInv.M[3][2], self.IaInv.M[3][3]}
+			{0, 0, 0, self.IaInv.M[3][1], self.IaInv.M[3][2], self.IaInv.M[3][3]},
 			{0, 0, 0, 0, 0, 0, self.mbInv, 0, 0, 0, 0, 0},
 			{0, 0, 0, 0, 0, 0, 0, self.mbInv, 0, 0, 0, 0},
 			{0, 0, 0, 0, 0, 0, 0, 0, self.mbInv, 0, 0, 0},
