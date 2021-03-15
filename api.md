@@ -132,7 +132,10 @@ faces = {
 }
 ```
 
-As you can see, this gets very messy just for a simple cube
+As you can see, this gets very messy just for a simple cube.
+
+To make things easier there is a Blender 2.8+ plugin available
+that generates the code from a Blender object.
 
 Friction and Bounciness Functions
 ---------------------------------
