@@ -158,6 +158,26 @@ end
 For both of those functions is `point` the collision point in local space of the
 body and `normal` the collision normal in global space.
 
+
+Collision Callbacks
+--------------------
+
+The functions `Rigidbody:on_collision(collision)` and
+`Rigidbody:on_end_collision(collision)` are callbacks for collisions.
+By default they are not implemented.
+
+The `collision` argument is a table in the following form:
+
+```lua
+{
+	a, -- the first rigidbody
+	b, -- the other rigidbody
+	collA, -- the collider of the first rigidbody involved in the collision
+	collB, -- the collider of the other rigidbody involved in the collision
+	contacts, -- a list of fysiks:Contact objects
+}
+```
+
 Normal Entity Feedback
 ----------------------
 
